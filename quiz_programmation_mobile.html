@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Quiz — Programmation Mobile</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #f4f3ef;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  color: #1a1917;
+  min-height: 100vh;
+  padding: 20px 14px 60px;
+  -webkit-text-size-adjust: 100%;
+}
+
+header { text-align: center; margin-bottom: 28px; }
+
+.badge {
+  display: inline-block;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  background: #1a1917;
+  color: #f4f3ef;
+  padding: 4px 12px;
+  border-radius: 100px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+h1 { font-size: 24px; font-weight: 700; letter-spacing: -0.02em; }
+.subtitle { color: #7a7672; font-size: 13px; margin-top: 5px; }
+
+.layout { max-width: 820px; margin: 0 auto; }
+
+.progress-wrap {
+  background: #fff;
+  border: 1px solid #e2dfd8;
+  border-radius: 12px;
+  padding: 14px 18px;
+  display: -webkit-box; display: flex;
+  -webkit-box-align: center; align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  -webkit-box-shadow: 0 2px 12px rgba(0,0,0,0.06); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+}
+
+.progress-label { font-size: 12px; white-space: nowrap; color: #7a7672; font-weight: 600; min-width: 80px; }
+.progress-bar { -webkit-box-flex: 1; flex: 1; height: 8px; background: #e2dfd8; border-radius: 100px; overflow: hidden; }
+.progress-fill { height: 100%; background: #2563eb; border-radius: 100px; width: 0%; -webkit-transition: width 0.4s; transition: width 0.4s; }
+.score-mini { font-size: 12px; color: #7a7672; white-space: nowrap; font-weight: 600; min-width: 50px; text-align: right; }
+
+.card {
+  background: #fff;
+  border: 1px solid #e2dfd8;
+  border-radius: 14px;
+  -webkit-box-shadow: 0 2px 12px rgba(0,0,0,0.06); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  overflow: hidden;
+  margin-bottom: 16px;
+}
+
+.card-header {
+  background: #1a1917; color: #f4f3ef; padding: 13px 20px;
+  display: -webkit-box; display: flex;
+  -webkit-box-align: center; align-items: center;
+  -webkit-box-pack: justify; justify-content: space-between;
+}
+
+.q-num { font-size: 13px; opacity: 0.7; font-weight: 600; }
+.q-type-badge { font-size: 11px; letter-spacing: 0.06em; background: rgba(255,255,255,0.15); padding: 3px 10px; border-radius: 100px; font-weight: 600; }
+
+.card-body { padding: 22px 20px 18px; }
+
+.question-text { font-size: 15px; font-weight: 500; line-height: 1.65; color: #1a1917; margin-bottom: 20px; }
+
+code { font-family: 'Courier New', Courier, monospace; background: #f0ede8; padding: 2px 6px; border-radius: 4px; font-size: 13px; color: #1a1917; }
+
+pre {
+  background: #1e1e2e; color: #cdd6f4;
+  border-radius: 10px; padding: 14px 16px;
+  font-family: 'Courier New', Courier, monospace; font-size: 12px; line-height: 1.6;
+  overflow-x: auto; margin: 10px 0 20px;
+  border: 1px solid #313244; white-space: pre;
+  -webkit-overflow-scrolling: touch;
+}
+
+.options-list {
+  display: -webkit-box; display: flex;
+  -webkit-box-orient: vertical; -webkit-box-direction: normal; flex-direction: column;
+  gap: 10px;
+}
+
+.option-item {
+  display: -webkit-box; display: flex;
+  -webkit-box-align: start; align-items: flex-start;
+  gap: 11px; padding: 12px 14px;
+  border: 1.5px solid #e2dfd8; border-radius: 10px;
+  cursor: pointer; background: #f9f8f5;
+  -webkit-transition: border-color 0.15s, background 0.15s; transition: border-color 0.15s, background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+  min-height: 48px;
+}
+
+.option-item.selected  { border-color: #2563eb; background: #dbeafe; }
+.option-item.disabled  { cursor: default; pointer-events: none; }
+.option-item.res-correct { border-color: #16a34a; background: #dcfce7; }
+.option-item.res-wrong   { border-color: #dc2626; background: #fee2e2; }
+.option-item.res-missed  { border-color: #16a34a; background: #dcfce7; opacity: 0.65; }
+
+.opt-ctrl {
+  width: 20px; height: 20px; min-width: 20px; min-height: 20px;
+  border: 2px solid #c5c0b8; background: #fff;
+  display: -webkit-box; display: flex;
+  -webkit-box-align: center; align-items: center;
+  -webkit-box-pack: center; justify-content: center;
+  -webkit-flex-shrink: 0; flex-shrink: 0;
+  margin-top: 1px;
+  -webkit-transition: background 0.15s, border-color 0.15s; transition: background 0.15s, border-color 0.15s;
+}
+
+.opt-ctrl.radio { border-radius: 50%; }
+.opt-ctrl.check { border-radius: 5px; }
+.opt-ctrl .ck { display: none; width: 12px; height: 12px; }
+
+.option-item.selected .opt-ctrl,
+.option-item.res-correct .opt-ctrl { background: #2563eb; border-color: #2563eb; }
+.option-item.selected .opt-ctrl .ck,
+.option-item.res-correct .opt-ctrl .ck { display: block; }
+
+.option-item.res-wrong .opt-ctrl { background: #dc2626; border-color: #dc2626; }
+.option-item.res-wrong .opt-ctrl .ck { display: block; }
+
+.option-item.res-missed .opt-ctrl { background: #16a34a; border-color: #16a34a; }
+.option-item.res-missed .opt-ctrl .ck { display: block; }
+
+.opt-letter { font-size: 12px; color: #7a7672; font-weight: 700; min-width: 16px; margin-top: 2px; font-family: 'Courier New', Courier, monospace; }
+.opt-text { font-size: 14px; line-height: 1.5; -webkit-box-flex: 1; flex: 1; color: #1a1917; }
+
+.btn-submit {
+  margin-top: 20px; width: 100%; padding: 14px;
+  background: #1a1917; color: #f4f3ef;
+  font-size: 13px; font-weight: 700; letter-spacing: 0.04em;
+  border: none; border-radius: 10px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-submit:disabled { opacity: 0.35; cursor: default; }
+.btn-submit:not(:disabled):active { opacity: 0.8; }
+
+.card-correction { display: none; }
+.card-correction.visible { display: block; }
+
+.correction-header {
+  padding: 13px 20px;
+  display: -webkit-box; display: flex;
+  -webkit-box-align: center; align-items: center;
+  gap: 10px; border-bottom: 1px solid #e2dfd8;
+  -webkit-flex-wrap: wrap; flex-wrap: wrap;
+}
+
+.verdict-badge { font-size: 12px; letter-spacing: 0.06em; padding: 4px 12px; border-radius: 100px; font-weight: 700; }
+.verdict-badge.correct { background: #dcfce7; color: #16a34a; }
+.verdict-badge.partial { background: #fef3c7; color: #d97706; }
+.verdict-badge.wrong   { background: #fee2e2; color: #dc2626; }
+.score-inline { font-size: 12px; color: #7a7672; font-weight: 600; margin-left: auto; }
+
+.correction-body { padding: 18px 20px; }
+.corr-label { font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: #7a7672; margin-bottom: 7px; font-weight: 700; }
+.corr-answer { font-size: 14px; line-height: 1.6; color: #1a1917; margin-bottom: 16px; }
+.corr-answer strong { color: #16a34a; }
+.justif-box { background: #f9f8f5; border: 1px solid #e2dfd8; border-radius: 10px; padding: 13px 15px; font-size: 13.5px; line-height: 1.65; color: #1a1917; }
+
+.nav-row {
+  display: -webkit-box; display: flex;
+  gap: 10px; margin-bottom: 16px;
+}
+
+.btn-nav {
+  -webkit-box-flex: 1; flex: 1; padding: 12px;
+  font-size: 13px; font-weight: 700;
+  border: 1.5px solid #e2dfd8; background: #fff; color: #1a1917;
+  border-radius: 10px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  -webkit-tap-highlight-color: transparent; text-align: center;
+}
+.btn-nav:disabled { opacity: 0.3; cursor: default; }
+.btn-nav.primary { background: #2563eb; border-color: #2563eb; color: #fff; }
+.btn-nav:not(:disabled):active { opacity: 0.75; }
+
+.score-screen {
+  display: none; background: #fff;
+  border: 1px solid #e2dfd8; border-radius: 14px;
+  -webkit-box-shadow: 0 2px 12px rgba(0,0,0,0.06); box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  padding: 40px 24px; text-align: center; margin-bottom: 16px;
+}
+.score-screen.visible { display: block; }
+
+.score-ring-wrap { margin: 0 auto 24px; width: 130px; height: 130px; position: relative; }
+.score-ring-wrap svg { -webkit-transform: rotate(-90deg); transform: rotate(-90deg); }
+.ring-bg  { fill: none; stroke: #e2dfd8; stroke-width: 10; }
+.ring-fill { fill: none; stroke: #2563eb; stroke-width: 10; stroke-linecap: round; -webkit-transition: stroke-dashoffset 1s ease; transition: stroke-dashoffset 1s ease; }
+
+.score-ring-text { position: absolute; top: 50%; left: 50%; -webkit-transform: translate(-50%,-50%); transform: translate(-50%,-50%); text-align: center; }
+.score-pct { font-size: 30px; font-weight: 700; color: #1a1917; line-height: 1; display: block; }
+.score-sub { font-size: 11px; color: #7a7672; font-weight: 600; display: block; margin-top: 2px; }
+
+.score-title { font-size: 20px; font-weight: 700; margin-bottom: 7px; }
+.score-desc { color: #7a7672; font-size: 14px; margin-bottom: 24px; }
+
+.score-stats {
+  display: -webkit-box; display: flex;
+  -webkit-box-pack: center; justify-content: center;
+  gap: 14px; margin-bottom: 28px;
+  -webkit-flex-wrap: wrap; flex-wrap: wrap;
+}
+
+.stat-box { background: #f9f8f5; border: 1px solid #e2dfd8; border-radius: 10px; padding: 12px 18px; min-width: 90px; }
+.stat-val { font-size: 24px; font-weight: 700; display: block; }
+.stat-lbl { font-size: 12px; color: #7a7672; margin-top: 2px; display: block; }
+.stat-box.green .stat-val { color: #16a34a; }
+.stat-box.yellow .stat-val { color: #d97706; }
+.stat-box.red .stat-val { color: #dc2626; }
+
+.btn-restart {
+  background: #1a1917; color: #f4f3ef;
+  font-size: 13px; font-weight: 700; border: none;
+  padding: 14px 28px; border-radius: 10px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn-restart:active { opacity: 0.8; }
+.hidden { display: none !important; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="badge">📱 Quiz</div>
+  <h1>Programmation Mobile</h1>
+  <p class="subtitle">40 questions — Correction instantanée</p>
+</header>
+
+<div class="layout">
+  <div class="progress-wrap">
+    <span class="progress-label">Progression</span>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <span class="score-mini" id="progressText">0 / 40</span>
+  </div>
+
+  <div class="card" id="questionCard">
+    <div class="card-header">
+      <span class="q-num" id="qNum">Question 1 / 40</span>
+      <span class="q-type-badge" id="qType">Choix unique</span>
+    </div>
+    <div class="card-body">
+      <div class="question-text" id="questionText"></div>
+      <div class="options-list" id="optionsList"></div>
+      <button class="btn-submit" id="btnSubmit" disabled onclick="submitAnswer()">Valider ma réponse</button>
+    </div>
+  </div>
+
+  <div class="card card-correction" id="correctionCard">
+    <div class="correction-header">
+      <span class="verdict-badge" id="verdictBadge">Correct</span>
+      <span class="score-inline" id="scoreLabel"></span>
+    </div>
+    <div class="correction-body">
+      <div class="corr-label">Reponse(s) correcte(s)</div>
+      <div class="corr-answer" id="correctAnswerText"></div>
+      <div class="corr-label">Justification</div>
+      <div class="justif-box" id="justifText"></div>
+    </div>
+  </div>
+
+  <div class="nav-row" id="navRow">
+    <button class="btn-nav" id="btnPrev" onclick="goPrev()" disabled>Precedent</button>
+    <button class="btn-nav primary" id="btnNext" onclick="goNext()" disabled>Suivant</button>
+  </div>
+
+  <div class="score-screen" id="scoreScreen">
+    <div class="score-ring-wrap">
+      <svg width="130" height="130" viewBox="0 0 130 130">
+        <circle class="ring-bg" cx="65" cy="65" r="55"/>
+        <circle class="ring-fill" id="ringFill" cx="65" cy="65" r="55" stroke-dasharray="345.4" stroke-dashoffset="345.4"/>
+      </svg>
+      <div class="score-ring-text">
+        <span class="score-pct" id="scorePct">0%</span>
+        <span class="score-sub">score</span>
+      </div>
+    </div>
+    <div class="score-title">Quiz termine !</div>
+    <div class="score-desc" id="scoreMsg"></div>
+    <div class="score-stats">
+      <div class="stat-box green"><span class="stat-val" id="statCorrect">0</span><span class="stat-lbl">Correctes</span></div>
+      <div class="stat-box yellow"><span class="stat-val" id="statPartial">0</span><span class="stat-lbl">Partielles</span></div>
+      <div class="stat-box red"><span class="stat-val" id="statWrong">0</span><span class="stat-lbl">Incorrectes</span></div>
+    </div>
+    <button class="btn-restart" onclick="restartQuiz()">Recommencer</button>
+  </div>
+</div>
+
+<script>
+var QUESTIONS_ORIGINAL = [
+  { id:1, text:"Cocher tous les dossiers valides d'un projet Android.", type:"multi",
+    options:[{letter:"a",text:"res"},{letter:"b",text:"manifests"},{letter:"c",text:"java"},{letter:"d",text:"src"}],
+    correct:["a","b","c"],
+    justification:"Dans un projet Android, les dossiers valides sont <strong>res</strong> (ressources), <strong>manifests</strong> (contient AndroidManifest.xml) et <strong>java</strong> (code source). Le dossier <strong>src</strong> est un concept Maven generique mais pas un dossier de premier niveau dans Android Studio."
+  },
+  { id:2, text:"Cocher la syntaxe valide pour typer une variable en Kotlin ?", type:"single",
+    options:[{letter:"a",text:"String myVar"},{letter:"b",text:"val myVar: String"},{letter:"c",text:"var myVar: String"},{letter:"d",text:"var myVar = String"}],
+    correct:["c"],
+    justification:"<strong>var myVar: String</strong> est la syntaxe correcte pour une variable mutable typee en Kotlin. Syntaxe : mot-cle (var/val) + nom + : + type. <code>val</code> est aussi valide mais declare une variable immuable."
+  },
+  { id:3, text:"Que represente <code>this</code> en Java ?", type:"single",
+    options:[{letter:"a",text:"La derniere variable utilisee"},{letter:"b",text:"Un objet"},{letter:"c",text:"L'objet courant"},{letter:"d",text:"La fonction appelee"}],
+    correct:["c"],
+    justification:"En Java, <code>this</code> est une reference vers l'instance courante de la classe. Il permet de distinguer les attributs des parametres portant le meme nom, ou d'appeler un autre constructeur de la meme classe."
+  },
+  { id:4, text:"Quel est le nom de l'IDE principal utilise pour le developpement iOS ?", type:"single",
+    options:[{letter:"a",text:"Android Creator"},{letter:"b",text:"Xcode"},{letter:"c",text:"Android Studio"},{letter:"d",text:"Codebrain"}],
+    correct:["c"],
+    justification:"Attention : la reponse indiquee dans le PDF est <strong>Android Studio</strong> (reponse c), meme si la question parle de developpement iOS (pour lequel Xcode est la realite). Il s'agit d'une erreur dans le sujet. La correction officielle du PDF indique : <strong>Android Studio</strong>."
+  },
+  { id:5, text:"Selectionner le bon fichier principal de configuration Android.", type:"single",
+    options:[{letter:"a",text:"build.gradle"},{letter:"b",text:"android.yaml"},{letter:"c",text:"AndroidManifest.xml"},{letter:"d",text:"infos.plist"}],
+    correct:["c"],
+    justification:"<strong>AndroidManifest.xml</strong> est le fichier de configuration principal d'une app Android. Il declare les composants (Activities, Services, Receivers), les permissions et les metadonnees. <code>info.plist</code> est son equivalent iOS."
+  },
+  { id:6, text:"Selectionner deux librairies utilisees pour recuperer des donnees d'un \"Webservice\" ?", type:"multi",
+    options:[{letter:"a",text:"Retrofit"},{letter:"b",text:"Realm"},{letter:"c",text:"Room"},{letter:"d",text:"Moshi"}],
+    correct:["a","d"],
+    justification:"<strong>Retrofit</strong> est une librairie HTTP pour appels REST. <strong>Moshi</strong> est un convertisseur JSON utilise avec Retrofit pour parser les reponses. Room et Realm sont des librairies de base de donnees locale."
+  },
+  { id:7, text:"Quel type de Widget dois-je utiliser si j'ai besoin de sauvegarder des variables ?", type:"single",
+    options:[{letter:"a",text:"ContainerWidget"},{letter:"b",text:"StatelessWidget"},{letter:"c",text:"FullWidget"},{letter:"d",text:"StatefulWidget"}],
+    correct:["d"],
+    justification:"En Flutter, un <strong>StatefulWidget</strong> possede un objet <code>State</code> qui stocke et gere des variables mutables. Quand elles changent via <code>setState()</code>, le widget se reconstruit. Un <strong>StatelessWidget</strong> est immuable."
+  },
+  { id:8, text:"Qu'est-ce qu'une <strong>destructuring declaration</strong> en Kotlin ?", type:"single",
+    options:[{letter:"a",text:"Une variable optionnelle"},{letter:"b",text:"Une technique pour defaire une instance de classe"},{letter:"c",text:"Un pointeur faible"},{letter:"d",text:"Une fonction qui va detruire l'objet courant"}],
+    correct:["b"],
+    justification:"La <strong>destructuring declaration</strong> Kotlin decompose un objet en plusieurs variables en une instruction :<pre>val (name, age) = person\n// equivalent a :\nval name = person.component1()\nval age  = person.component2()</pre>Fonctionne grace aux fonctions <code>componentN()</code> des <code>data class</code>."
+  },
+  { id:9, text:"Cocher la bonne syntaxe permettant d'afficher en console les variables suivantes en Java :", type:"single",
+    options:[{letter:"a",text:"println(maVar);"},{letter:"b",text:"System.out.println(maVar);"},{letter:"c",text:"System.print(maVar);"},{letter:"d",text:"NSLog(maVar);"}],
+    correct:["b"],
+    justification:"En Java, l'affichage console se fait via <code>System.out.println()</code>. <code>System.out</code> est le flux de sortie standard. <code>NSLog</code> est Objective-C/Swift, et <code>println</code> seul est Kotlin."
+  },
+  { id:10, text:"Quel fichier correspond au fichier de configuration du projet Flutter ?", type:"single",
+    options:[{letter:"a",text:"config.yaml"},{letter:"b",text:"build.gradle"},{letter:"c",text:"pubspec.yaml"},{letter:"d",text:"info.plist"}],
+    correct:["c"],
+    justification:"<strong>pubspec.yaml</strong> est le fichier de configuration principal d'un projet Flutter/Dart. Il definit le nom, la version, les dependances (packages), les assets (images, polices). Equivalent de <code>package.json</code> en Node.js."
+  },
+  { id:11, text:"Quelle syntaxe est bonne pour appeler un API endpoint ?", type:"single",
+    options:[{letter:"a",text:"this getAPI()"},{letter:"b",text:"await http.get()"},{letter:"c",text:"urlRequest.makeRequest()"},{letter:"d",text:"$.get()"}],
+    correct:["b"],
+    justification:"<code>await http.get()</code> est la syntaxe Flutter/Dart pour une requete HTTP GET asynchrone. Le package <code>http</code> de Dart fournit cette methode. <code>await</code> est utilise dans une fonction <code>async</code>."
+  },
+  { id:12, text:"Quels sont les deux composants principaux utilises pour creer des interfaces ?", type:"multi",
+    options:[{letter:"a",text:"Activity"},{letter:"b",text:"Layout"},{letter:"c",text:"View"},{letter:"d",text:"Fragment"}],
+    correct:["a","d"],
+    justification:"En Android : <strong>Activity</strong> represente un ecran entier, <strong>Fragment</strong> est une portion reutilisable d'interface dans une Activity. Layouts et Views sont des elements d'UI, pas des composants architecturaux principaux."
+  },
+  { id:13, text:"Quelles declarations sont correctes concernant les fonctions <code>main()</code> et <code>runApp()</code> ?", type:"multi",
+    options:[
+      {letter:"a",text:"runApp() is the first one to be called (runApp() est la premiere a etre appelee)"},
+      {letter:"b",text:"main() is responsible for starting the program (main() est responsable du lancement du programme)"},
+      {letter:"c",text:"main() and runApp() are never used in the same project (main() et runApp() ne sont jamais utilisees dans le meme programme)"},
+      {letter:"d",text:"runApp() returns the root of the widget tree (runApp() renvoie la racine du widget tree)"}
+    ],
+    correct:["b","d"],
+    justification:"En Flutter : <code>main()</code> est le point d'entree Dart (appelee en premier), elle appelle ensuite <code>runApp()</code> qui recoit le widget racine :<pre>void main() {\n  runApp(MyApp());\n}</pre><code>runApp()</code> recoit la racine du widget tree en parametre."
+  },
+  { id:14, text:"A quoi correspond le <code>?</code> apres un type de variable en Swift ?", type:"multi",
+    options:[
+      {letter:"a",text:"A une variable declaree sans etre initialisee"},
+      {letter:"b",text:"A une variable qui est nulle"},
+      {letter:"c",text:"A une variable qui peut etre nulle"},
+      {letter:"d",text:"A une variable dont le type est indefini"}
+    ],
+    correct:["a","c"],
+    justification:"En Swift, <code>?</code> apres un type cree un <strong>Optional</strong> : la variable peut contenir une valeur ou etre <code>nil</code>. Elle peut aussi etre declaree sans valeur initiale :<pre>var name: String?  // peut etre nil\nvar age: Int?      // declaree sans valeur</pre>"
+  },
+  { id:15, text:"Cocher les bonnes significations du terme MVC :", type:"single",
+    options:[
+      {letter:"a",text:"Model - Vocation - Contributor"},
+      {letter:"b",text:"Map - Vocal - Controller"},
+      {letter:"c",text:"Mediator - View - Conflict"},
+      {letter:"d",text:"Model - View - Controller (Modele - Vue - Controleur)"}
+    ],
+    correct:["d"],
+    justification:"<strong>MVC = Model - View - Controller</strong> : patron d'architecture separant en 3 composants. <strong>Model</strong> (donnees/logique metier), <strong>View</strong> (interface utilisateur), <strong>Controller</strong> (intermediaire entre Model et View)."
+  },
+  { id:16, text:"Qu'est-ce qu'AVD ?", type:"single",
+    options:[{letter:"a",text:"Garbage collector en Kotlin"},{letter:"b",text:"Aucune des solutions"},{letter:"c",text:"L'outil pour build and sign une application Android"},{letter:"d",text:"L'outil pour gerer les peripheriques virtuelles"}],
+    correct:["d"],
+    justification:"<strong>AVD (Android Virtual Device)</strong> est l'emulateur d'Android Studio pour creer et gerer des appareils Android virtuels. Il permet de tester les applications sans appareil physique, simulant differents modeles et versions d'Android."
+  },
+  { id:17, text:"Cocher la bonne syntaxe permettant de creer une fonction en Java ?", type:"single",
+    options:[
+      {letter:"a",text:"func String myFunction(str: String)"},
+      {letter:"b",text:"public String myFunction(String str)"},
+      {letter:"c",text:"- (void) myFunction String) str"},
+      {letter:"d",text:"fun myFunction(str: String) String"}
+    ],
+    correct:["b"],
+    justification:"En Java : <code>modificateur typeRetour nomMethode(TypeParam nomParam)</code>. Donc <code>public String myFunction(String str)</code> est correcte. <code>fun</code> est Kotlin, <code>func</code> est Swift, la syntaxe avec <code>-</code> est Objective-C."
+  },
+  { id:18, text:"Comment passer des donnees entre des activites sur Android ?", type:"single",
+    options:[{letter:"a",text:"Broadcast receiver"},{letter:"b",text:"None of the Above (Aucune des solutions)"},{letter:"c",text:"Content Provider"},{letter:"d",text:"Intent"}],
+    correct:["d"],
+    justification:"Les <strong>Intent</strong> sont le mecanisme standard pour passer des donnees entre Activities :<pre>// Envoi\nval intent = Intent(this, SecondActivity::class.java)\nintent.putExtra(\"key\", \"valeur\")\nstartActivity(intent)\n\n// Reception\nval data = intent.getStringExtra(\"key\")</pre>"
+  },
+  { id:19, text:"Qu'est-ce qu'une singleton class en Android ?", type:"single",
+    options:[{letter:"a",text:"Java class"},{letter:"b",text:"Une classe qui ne peut creer qu'un objet"},{letter:"c",text:"Manifest file"},{letter:"d",text:"Anonymous class"}],
+    correct:["b"],
+    justification:"Le <strong>Singleton</strong> garantit qu'une classe n'a qu'une seule instance dans toute l'application. En Kotlin, c'est natif avec le mot-cle <code>object</code>. Utile pour les repositories, managers de configuration, etc."
+  },
+  { id:20, text:"Quelles syntaxes sont correctes pour declarer une variable myVar ?", type:"multi",
+    options:[
+      {letter:"a",text:'var myVar = "str";'},
+      {letter:"b",text:'var myVar: String = "str";'},
+      {letter:"c",text:'var String myVar = "str";'},
+      {letter:"d",text:'String myVar = "str";'}
+    ],
+    correct:["a","d"],
+    justification:'Selon la correction du PDF : <code>var myVar = "str";</code> (Kotlin avec inference de type) et <code>String myVar = "str";</code> (Java). La reponse b est aussi valide en Kotlin mais non retenue dans la correction officielle.'
+  },
+  { id:21, text:"Qu'est-ce qu'un splash screen sur Android ?", type:"single",
+    options:[
+      {letter:"a",text:"Initial service of an application (Le service initial de l'application)"},
+      {letter:"b",text:"Initial method of an application (La methode initiale de l'application)"},
+      {letter:"c",text:"Initial screen of an application (L'ecran initial de l'application)"},
+      {letter:"d",text:"Initial activity of an application (Activity initiale de l'application)"}
+    ],
+    correct:["c"],
+    justification:"Le <strong>Splash Screen</strong> est l'ecran initial affiche au lancement de l'application, generalement pendant l'initialisation des ressources. Il affiche souvent le logo ou le nom de l'app."
+  },
+  { id:22, text:"Comment stocker des donnees lourdement structurees en Android ?", type:"single",
+    options:[{letter:"a",text:"Shared Preferences"},{letter:"b",text:"SQlite Database"},{letter:"c",text:"Cursor"},{letter:"d",text:"Pas possible"}],
+    correct:["b"],
+    justification:"<strong>SQLite</strong> est le systeme de base de donnees relationnelle integre a Android pour donnees structurees complexes. <em>SharedPreferences</em> est adapte aux petites donnees cle-valeur simples. Room est la couche recommandee au-dessus de SQLite."
+  },
+  { id:23, text:"Quelle classe est mieux pour debug que println en Kotlin ?", type:"single",
+    options:[{letter:"a",text:"Log"},{letter:"b",text:"NSLog"},{letter:"c",text:"echo"},{letter:"d",text:"Logger"}],
+    correct:["a"],
+    justification:"La classe <strong>Log</strong> d'Android (<code>android.util.Log</code>) offre differents niveaux : <code>Log.d()</code> (debug), <code>Log.e()</code> (error), <code>Log.w()</code> (warning), <code>Log.i()</code> (info), visibles dans le Logcat d'Android Studio."
+  },
+  { id:24, text:"Selectionner les layouts disponibles sur Android.", type:"multi",
+    options:[{letter:"a",text:"FlowLayout"},{letter:"b",text:"RelativeLayout"},{letter:"c",text:"LinearLayout"},{letter:"d",text:"ConstraintLayout"},{letter:"e",text:"ListLayout"}],
+    correct:["b","c","d"],
+    justification:"Layouts Android standard : <strong>LinearLayout</strong> (disposition lineaire), <strong>RelativeLayout</strong> (positionnement relatif), <strong>ConstraintLayout</strong> (flexible avec contraintes, recommande). FlowLayout et ListLayout n'existent pas dans le SDK natif."
+  },
+  { id:25, text:"En Kotlin, quel mot-cle permet de definir une constante ?", type:"single",
+    options:[{letter:"a",text:"var"},{letter:"b",text:"val"},{letter:"c",text:"const"},{letter:"d",text:"let"}],
+    correct:["b"],
+    justification:"<strong>val</strong> en Kotlin declare une variable en lecture seule (immutable), assignable une seule fois. <code>const val</code> existe pour les constantes de compilation. <code>var</code> est mutable, <code>let</code> est Swift."
+  },
+  { id:26, text:"Quel mot-cle est le bon pour creer un objet en Java ?", type:"single",
+    options:[{letter:"a",text:"new Class()"},{letter:"b",text:"new(Class)"},{letter:"c",text:"Class()"},{letter:"d",text:"create Class()"}],
+    correct:["a"],
+    justification:"En Java, on instancie avec <strong>new</strong> suivi du constructeur : <code>MyClass obj = new MyClass();</code>. <code>new</code> alloue la memoire et appelle le constructeur. En Kotlin, <code>new</code> n'est pas necessaire."
+  },
+  { id:27, text:"Quels sont les types primitifs dans cette liste, en Java ?", type:"multi",
+    options:[{letter:"a",text:"URL"},{letter:"b",text:"String"},{letter:"c",text:"char"},{letter:"d",text:"int"}],
+    correct:["c","d"],
+    justification:"Types primitifs Java : <code>int</code>, <code>char</code>, <code>boolean</code>, <code>byte</code>, <code>short</code>, <code>long</code>, <code>float</code>, <code>double</code>. <strong>String</strong> est une classe (type reference). <strong>URL</strong> est aussi une classe Java."
+  },
+  { id:28, text:"Qu'est-ce que le Hot Reloading ?", type:"single",
+    options:[
+      {letter:"a",text:"Recharge automatiquement quand un fichier source est modifie"},
+      {letter:"b",text:"Recharge seulement quand necessaire"},
+      {letter:"c",text:"Recharge meme si une erreur est survenue"},
+      {letter:"d",text:"Rechargement epice"}
+    ],
+    correct:["a"],
+    justification:"Le <strong>Hot Reload</strong> Flutter injecte automatiquement le nouveau code dans l'app en cours d'execution des qu'un fichier est sauvegarde, sans redemarrer l'app ni perdre l'etat actuel. Gain de productivite majeur."
+  },
+  { id:29, text:"Selectionner quelques alternatives a Flutter pour le developpement hybride.", type:"multi",
+    options:[{letter:"a",text:"Angular"},{letter:"b",text:"Python"},{letter:"c",text:"Ionic"},{letter:"d",text:"React Native"}],
+    correct:["c","d"],
+    justification:"<strong>React Native</strong> (Meta) et <strong>Ionic</strong> sont des frameworks mobile hybride/cross-platform. Angular est un framework web uniquement, Python n'est pas utilise pour du mobile hybride."
+  },
+  { id:30, text:"Cocher la syntaxe valide pour ajouter une fonction a une classe de type (Ex. Int) en Kotlin ?", type:"single",
+    options:[
+      {letter:"a",text:"fun Int.myFunction(): Int"},
+      {letter:"b",text:"fun Int myFunction(): Int"},
+      {letter:"c",text:"extension Int { public myFunction() }"},
+      {letter:"d",text:"public Int myFunction()"}
+    ],
+    correct:["a"],
+    justification:"Les <strong>Extension Functions</strong> Kotlin ajoutent des methodes a une classe existante :<pre>fun Int.double(): Int {\n    return this * 2\n}\nval result = 5.double() // 10</pre>Syntaxe : <code>fun TypeExistant.nomFonction(): TypeRetour</code>."
+  },
+  { id:31, text:"Que sont les Widgets Flutter ?", type:"multi",
+    options:[
+      {letter:"a",text:"Un peut afficher un autre widget"},
+      {letter:"b",text:"Peut-etre affiche sur l'ecran d'accueil"},
+      {letter:"c",text:"Represente un composant graphique"},
+      {letter:"d",text:"Represente un smiley"}
+    ],
+    correct:["a","c"],
+    justification:"En Flutter, tout est un <strong>Widget</strong>. Un widget represente un composant graphique (bouton, texte, image, layout...) et peut en contenir d'autres. L'arbre de widgets constitue l'interface complete."
+  },
+  { id:32, text:"Que sont les packages / plugins dans Flutter ?", type:"multi",
+    options:[
+      {letter:"a",text:"Fournissent de nouvelles fonctionnalites"},
+      {letter:"b",text:"Des dependances obligatoires"},
+      {letter:"c",text:"Donnees supplementaires"},
+      {letter:"d",text:"Peut-etre des widgets a importer"}
+    ],
+    correct:["a","d"],
+    justification:"Les <strong>packages Flutter</strong> sont des librairies declarees dans <code>pubspec.yaml</code> qui ajoutent des fonctionnalites (ex: <code>http</code>, <code>provider</code>). Certains fournissent des widgets a importer. Ils ne sont pas obligatoires."
+  },
+  { id:33, text:"En Dart, comment creez-vous une constante ?", type:"single",
+    options:[{letter:"a",text:"const x: Int"},{letter:"b",text:"let int x"},{letter:"c",text:"final int x"},{letter:"d",text:"val x: Int"}],
+    correct:["c"],
+    justification:"En <strong>Dart</strong>, <code>final</code> declare une variable assignable une seule fois (constante a l'execution). <code>const</code> existe pour les constantes de compilation. <code>val</code> est Kotlin, <code>let</code> est Swift."
+  },
+  { id:34, text:"Selectionner les methodes du cycle de vie correctes ci-dessous.", type:"multi",
+    options:[{letter:"a",text:"onStart()"},{letter:"b",text:"onCreate()"},{letter:"c",text:"onStop()"},{letter:"d",text:"onHang()"}],
+    correct:["a","b","c"],
+    justification:"Cycle de vie Activity Android : <code>onCreate()</code> (creation), <code>onStart()</code> (visible), <code>onResume()</code> (interactive), <code>onPause()</code>, <code>onStop()</code> (non visible), <code>onDestroy()</code>. <code>onHang()</code> n'existe pas."
+  },
+  { id:35, text:"Selectionner tous les sous-dossiers corrects de res dans la liste ci-dessous.", type:"multi",
+    options:[{letter:"a",text:"misc"},{letter:"b",text:"values"},{letter:"c",text:"drawable"},{letter:"d",text:"layout"}],
+    correct:["b","c","d"],
+    justification:"Le dossier <strong>res</strong> d'Android contient : <code>drawable</code> (images), <code>layout</code> (XML d'interface), <code>values</code> (strings.xml, colors.xml), <code>mipmap</code>, <code>raw</code>, <code>anim</code>... <code>misc</code> n'est pas standard."
+  },
+  { id:36, text:"Combien y a-t-il de constructeur(s) en Kotlin ?", type:"single",
+    options:[{letter:"a",text:"3"},{letter:"b",text:"1"},{letter:"c",text:"2"},{letter:"d",text:"0"}],
+    correct:["c"],
+    justification:"En Kotlin, 2 types de constructeurs : le <strong>constructeur primaire</strong> (dans la signature de la classe) et les <strong>constructeurs secondaires</strong> (dans le corps avec le mot-cle <code>constructor</code>)."
+  },
+  { id:37, text:"Quel mot-cle est utilise pour faire heriter une classe d'une autre ?", type:"single",
+    options:[{letter:"a",text:":"},{letter:"b",text:"implements"},{letter:"c",text:"extends"},{letter:"d",text:"inherits"}],
+    correct:["c"],
+    justification:"En Java, <strong>extends</strong> est utilise pour l'heritage : <code>class Dog extends Animal {}</code>. <code>implements</code> est pour les interfaces. En Kotlin, c'est le signe <code>:</code> qui sert a la fois pour l'heritage et les interfaces."
+  },
+  { id:38, text:"Quels sont les deux langages utilises pour le developpement Android ?", type:"multi",
+    options:[{letter:"a",text:"Swift"},{letter:"b",text:"Kotlin"},{letter:"c",text:"Java"},{letter:"d",text:"Python"}],
+    correct:["b","c"],
+    justification:"Le developpement Android natif utilise <strong>Java</strong> (historique) et <strong>Kotlin</strong> (officiel prefere par Google depuis 2017). Swift est iOS/Apple, Python n'est pas supporte nativement pour Android."
+  },
+  { id:39, text:"Comment declarez-vous des variables statiques en Kotlin ?", type:"single",
+    options:[{letter:"a",text:"static val myVar"},{letter:"b",text:"companion object"},{letter:"c",text:"static var myVar"},{letter:"d",text:"final var myVar"}],
+    correct:["b"],
+    justification:"En Kotlin, <code>static</code> n'existe pas. Pour l'equivalent des membres statiques Java, on utilise <strong>companion object</strong> :<pre>class MyClass {\n    companion object {\n        val myStaticVar = \"valeur\"\n    }\n}</pre>"
+  },
+  { id:40, text:"Cocher les quatre concepts majeurs de la programmation orientee objet :", type:"multi",
+    options:[
+      {letter:"a",text:"Abstraction (Abstraction)"},
+      {letter:"b",text:"Encapsulation (Encapsulation)"},
+      {letter:"c",text:"Succession (Succession)"},
+      {letter:"d",text:"Inheritance (Heritage)"},
+      {letter:"e",text:"Polymorphism (Polymorphisme)"}
+    ],
+    correct:["a","b","d","e"],
+    justification:"Les 4 piliers de la POO : <strong>Abstraction</strong> (cacher la complexite), <strong>Encapsulation</strong> (regrouper donnees et methodes), <strong>Heritage/Inheritance</strong> (reutiliser et etendre des classes), <strong>Polymorphisme</strong> (un objet peut prendre plusieurs formes). Succession n'est pas un terme POO."
+  }
+];
+
+var questions = [];
+var currentIdx = 0;
+var userAnswers = {};
+var submitted = {};
+var scores = { correct:0, partial:0, wrong:0 };
+
+function shuffle(arr) {
+  var a = arr.slice();
+  for (var i = a.length - 1; i > 0; i--) {
+    var j = Math.floor(Math.random() * (i + 1));
+    var t = a[i]; a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+
+function includes(arr, val) {
+  for (var i = 0; i < arr.length; i++) if (arr[i] === val) return true;
+  return false;
+}
+
+function init() {
+  questions = shuffle(QUESTIONS_ORIGINAL);
+  currentIdx = 0; userAnswers = {}; submitted = {};
+  scores = {correct:0,partial:0,wrong:0};
+  document.getElementById('scoreScreen').className = 'score-screen';
+  document.getElementById('questionCard').className = 'card';
+  document.getElementById('correctionCard').className = 'card card-correction';
+  document.getElementById('navRow').className = 'nav-row';
+  renderQuestion();
+}
+
+function renderQuestion() {
+  var q = questions[currentIdx];
+  var isSub = !!submitted[currentIdx];
+  var sel = userAnswers[currentIdx] || [];
+
+  document.getElementById('qNum').textContent = 'Question ' + (currentIdx+1) + ' / ' + questions.length;
+  document.getElementById('qType').textContent = q.type === 'multi' ? 'Choix multiples' : 'Choix unique';
+  document.getElementById('questionText').innerHTML = q.text;
+
+  var done = 0;
+  for (var k in submitted) { if (submitted[k]) done++; }
+  var pct = Math.round((done / questions.length) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressText').textContent = done + ' / ' + questions.length;
+
+  var list = document.getElementById('optionsList');
+  list.innerHTML = '';
+
+  for (var i = 0; i < q.options.length; i++) {
+    (function(opt) {
+      var isSel = includes(sel, opt.letter);
+      var isCorr = includes(q.correct, opt.letter);
+      var item = document.createElement('div');
+      var cls = 'option-item';
+      if (isSub) {
+        cls += ' disabled';
+        if (isCorr && isSel) cls += ' res-correct';
+        else if (!isCorr && isSel) cls += ' res-wrong';
+        else if (isCorr && !isSel) cls += ' res-missed';
+      } else {
+        if (isSel) cls += ' selected';
+      }
+      item.className = cls;
+
+      var ctrlCls = q.type === 'single' ? 'radio' : 'check';
+      item.innerHTML =
+        '<div class="opt-ctrl ' + ctrlCls + '">' +
+          '<svg class="ck" viewBox="0 0 12 12" fill="none">' +
+            '<path d="M2 6L5 9L10 3" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>' +
+          '</svg>' +
+        '</div>' +
+        '<span class="opt-letter">' + opt.letter + '.</span>' +
+        '<span class="opt-text">' + opt.text + '</span>';
+
+      if (!isSub) {
+        item.addEventListener('click', function() { toggleOption(opt.letter); });
+      }
+      list.appendChild(item);
+    })(q.options[i]);
+  }
+
+  var btn = document.getElementById('btnSubmit');
+  btn.disabled = isSub || sel.length === 0;
+  btn.textContent = isSub ? 'Reponse validee' : 'Valider ma reponse';
+
+  if (isSub) { showCorrection(q, sel); }
+  else {
+    document.getElementById('correctionCard').className = 'card card-correction';
+  }
+
+  document.getElementById('btnPrev').disabled = currentIdx === 0;
+  document.getElementById('btnNext').disabled = currentIdx === questions.length - 1 || !isSub;
+}
+
+function toggleOption(letter) {
+  if (submitted[currentIdx]) return;
+  var q = questions[currentIdx];
+  var sel = (userAnswers[currentIdx] || []).slice();
+  if (q.type === 'single') {
+    sel = includes(sel, letter) ? [] : [letter];
+  } else {
+    if (includes(sel, letter)) { sel.splice(sel.indexOf(letter), 1); }
+    else { sel.push(letter); }
+  }
+  userAnswers[currentIdx] = sel;
+  renderQuestion();
+}
+
+function submitAnswer() {
+  if (submitted[currentIdx]) return;
+  var sel = userAnswers[currentIdx] || [];
+  if (sel.length === 0) return;
+  submitted[currentIdx] = true;
+
+  var q = questions[currentIdx];
+  var ca = q.correct;
+  var allOk = sel.length === ca.length;
+  var anyOk = false; var anyBad = false;
+  for (var i = 0; i < ca.length; i++) { if (!includes(sel, ca[i])) allOk = false; else anyOk = true; }
+  for (var j = 0; j < sel.length; j++) { if (!includes(ca, sel[j])) { anyBad = true; allOk = false; } }
+
+  if (allOk) scores.correct++;
+  else if (anyOk) scores.partial++;
+  else scores.wrong++;
+
+  renderQuestion();
+
+  if (currentIdx < questions.length - 1) {
+    setTimeout(function() { currentIdx++; renderQuestion(); }, 1800);
+  } else {
+    setTimeout(function() { showFinalScore(); }, 1800);
+  }
+}
+
+function showCorrection(q, sel) {
+  document.getElementById('correctionCard').className = 'card card-correction visible';
+  var ca = q.correct;
+  var allOk = sel.length === ca.length;
+  var anyOk = false; var anyBad = false;
+  for (var i = 0; i < ca.length; i++) { if (!includes(sel, ca[i])) allOk = false; else anyOk = true; }
+  for (var j = 0; j < sel.length; j++) { if (!includes(ca, sel[j])) { anyBad = true; allOk = false; } }
+
+  var badge = document.getElementById('verdictBadge');
+  if (allOk) { badge.textContent = 'Correct'; badge.className = 'verdict-badge correct'; }
+  else if (anyOk) { badge.textContent = 'Partiellement correct'; badge.className = 'verdict-badge partial'; }
+  else { badge.textContent = 'Incorrect'; badge.className = 'verdict-badge wrong'; }
+
+  var html = '';
+  for (var k = 0; k < ca.length; k++) {
+    var l = ca[k]; var opt = null;
+    for (var m = 0; m < q.options.length; m++) { if (q.options[m].letter === l) { opt = q.options[m]; break; } }
+    html += '<strong>' + l.toUpperCase() + '. ' + (opt ? opt.text : l) + '</strong><br>';
+  }
+  document.getElementById('correctAnswerText').innerHTML = html;
+  document.getElementById('justifText').innerHTML = q.justification;
+  document.getElementById('scoreLabel').textContent = scores.correct + ' ok  ' + scores.partial + ' partiel  ' + scores.wrong + ' faux';
+}
+
+function goPrev() { if (currentIdx > 0) { currentIdx--; renderQuestion(); } }
+function goNext() { if (currentIdx < questions.length - 1) { currentIdx++; renderQuestion(); } }
+
+function showFinalScore() {
+  document.getElementById('questionCard').className = 'card hidden';
+  document.getElementById('correctionCard').className = 'card card-correction hidden';
+  document.getElementById('navRow').className = 'nav-row hidden';
+
+  var total = questions.length;
+  var pts = scores.correct + scores.partial * 0.5;
+  var pct = Math.round((pts / total) * 100);
+
+  document.getElementById('scoreScreen').className = 'score-screen visible';
+  document.getElementById('scorePct').textContent = pct + '%';
+  document.getElementById('statCorrect').textContent = scores.correct;
+  document.getElementById('statPartial').textContent = scores.partial;
+  document.getElementById('statWrong').textContent = scores.wrong;
+
+  var msg = pct >= 90 ? 'Excellent ! Maitrise complete du cours !' :
+            pct >= 75 ? 'Tres bien ! Quelques points a revoir.' :
+            pct >= 60 ? 'Passable. Revoyez les notions manquees.' :
+                        'Des lacunes a combler. Bon courage !';
+  document.getElementById('scoreMsg').textContent = msg;
+
+  var circ = 2 * Math.PI * 55;
+  var offset = circ - (pct / 100) * circ;
+  var ring = document.getElementById('ringFill');
+  ring.setAttribute('stroke-dasharray', circ.toString());
+  ring.setAttribute('stroke-dashoffset', circ.toString());
+  setTimeout(function() { ring.setAttribute('stroke-dashoffset', offset.toString()); }, 100);
+
+  document.getElementById('progressFill').style.width = '100%';
+  document.getElementById('progressText').textContent = total + ' / ' + total;
+}
+
+function restartQuiz() { init(); }
+
+window.onload = function() { init(); };
+</script>
+</body>
+</html>
